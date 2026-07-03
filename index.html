@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ego on the Line</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23d9f24a'/><path d='M50 4 Q18 22 18 50 Q18 78 50 96' fill='none' stroke='white' stroke-width='7' stroke-linecap='round'/><path d='M50 4 Q82 22 82 50 Q82 78 50 96' fill='none' stroke='white' stroke-width='7' stroke-linecap='round'/></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎾</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600&family=Archivo+Black&display=swap" rel="stylesheet">
@@ -447,7 +447,7 @@
       </div>
 
       <div class="field">
-        <label>Resultado por sets (TB = pontos no tiebreak, opcional)</label>
+        <label>Resultado</label>
         <div id="sets"></div>
         <button class="btn-set" id="add-set">+ adicionar set</button>
       </div>
@@ -466,7 +466,6 @@
       <div class="field">
         <label>Data e hora</label>
         <input type="datetime-local" id="played_at">
-        <div class="time-note">A hora é opcional, fica só para referência.</div>
       </div>
 
       <div class="field">
@@ -572,6 +571,23 @@ function fillSelects(p1id, p2id) {
 }
 
 // ---- Set row (reutilizável para form e modal) ----
+function isTiebreak(a, b) {
+  return (parseInt(a) === 7 && parseInt(b) === 6) || (parseInt(a) === 6 && parseInt(b) === 7);
+}
+
+function updateTbVisibility(row) {
+  const a = row.querySelector('.s-a').value.trim();
+  const b = row.querySelector('.s-b').value.trim();
+  const tbBlock = row.querySelector('.tb-block');
+  if (isTiebreak(a, b)) {
+    tbBlock.style.display = 'flex';
+  } else {
+    tbBlock.style.display = 'none';
+    row.querySelector('.s-tba').value = '';
+    row.querySelector('.s-tbb').value = '';
+  }
+}
+
 function makeSetRow(n, container, vals) {
   const row = document.createElement('div');
   row.className = 'set-row';
@@ -579,21 +595,29 @@ function makeSetRow(n, container, vals) {
   const sb = vals ? vals[1] : '';
   const tba = vals && vals[2] != null ? vals[2] : '';
   const tbb = vals && vals[3] != null ? vals[3] : '';
+  const showTb = isTiebreak(sa, sb);
   row.innerHTML = `
     <span class="set-label">Set ${n}</span>
     <div class="set-score-block">
       <div class="set-col">
         <input type="text" inputmode="numeric" class="s-a" placeholder="7" maxlength="2" value="${sa}">
-        <input type="text" inputmode="numeric" class="s-tba tb-mini" placeholder="TB" maxlength="2" value="${tba}">
       </div>
       <div class="set-dash-col"><span class="set-dash">–</span></div>
       <div class="set-col">
         <input type="text" inputmode="numeric" class="s-b" placeholder="5" maxlength="2" value="${sb}">
-        <input type="text" inputmode="numeric" class="s-tbb tb-mini" placeholder="TB" maxlength="2" value="${tbb}">
+      </div>
+      <div class="tb-block" style="display:${showTb ? 'flex' : 'none'}; align-items:center; gap:4px; margin-left:6px;">
+        <span class="tb-label" style="font-size:11px;color:var(--muted);white-space:nowrap;">TB</span>
+        <input type="text" inputmode="numeric" class="s-tba tb-mini" placeholder="–" maxlength="2" value="${tba}">
+        <span style="color:var(--muted);font-size:12px;">-</span>
+        <input type="text" inputmode="numeric" class="s-tbb tb-mini" placeholder="–" maxlength="2" value="${tbb}">
       </div>
     </div>
     <button class="btn-remove-set" title="remover" onclick="this.parentElement.remove(); renumberSets('${container}');">×</button>
   `;
+  // Listeners nos dois campos de score para mostrar/esconder TB
+  row.querySelector('.s-a').addEventListener('input', () => updateTbVisibility(row));
+  row.querySelector('.s-b').addEventListener('input', () => updateTbVisibility(row));
   document.getElementById(container).appendChild(row);
 }
 

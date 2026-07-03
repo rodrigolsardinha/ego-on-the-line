@@ -156,6 +156,14 @@
     text-align: center;
     padding: 0 4px;
   }
+  .duel-sets {
+    text-align: center;
+    font-size: 13px;
+    color: var(--muted);
+    padding: 0 16px 14px;
+    letter-spacing: .3px;
+  }
+  .duel-sets b { color: var(--ink); font-family: 'Archivo', sans-serif; font-weight: 600; }
   .duel-footer {
     border-top: 1px solid #e6ede8;
     padding: 10px 16px;
@@ -769,35 +777,56 @@ function fmtScore(sets) {
   }).join('&nbsp; ');
 }
 
-// ---- Vencedor (ignora super-tiebreaks na contagem de sets) ----
+// ---- Vencedor do jogo ----
+// Sets normais decidem. Se empatarem em sets, um super-tiebreak (se existir) desempata.
 function decideWinner(m) {
   let s1 = 0, s2 = 0;
+  let superWinner = null;
   m.sets.forEach(s => {
     const [a, b, , , isSuper] = s;
-    if (isSuper) return; // super-TB não conta como set
+    if (isSuper) {
+      if (a > b) superWinner = m.player1;
+      else if (b > a) superWinner = m.player2;
+      return;
+    }
     if (a > b) s1++; else if (b > a) s2++;
   });
   if (s1 > s2) return m.player1;
   if (s2 > s1) return m.player2;
-  return null;
+  // empate em sets: decide o super-tiebreak, se houver
+  return superWinner;
 }
 
 function calcDuel(pa, pb) {
-  let va = 0, vb = 0;
+  let va = 0, vb = 0;      // jogos ganhos
+  let setsA = 0, setsB = 0; // sets ganhos (super-TB não conta)
   matches.forEach(m => {
     const players = [m.player1, m.player2];
     if (!players.includes(pa) || !players.includes(pb)) return;
+
+    // Sets ganhos: player1 = coluna a, player2 = coluna b
+    m.sets.forEach(s => {
+      const [ga, gb, , , isSuper] = s;
+      if (isSuper) return;
+      let winner = null;
+      if (ga > gb) winner = m.player1;
+      else if (gb > ga) winner = m.player2;
+      if (winner === pa) setsA++;
+      else if (winner === pb) setsB++;
+    });
+
+    // Jogos ganhos
     const w = decideWinner(m);
     if (!w) return;
     if (w === pa) va++; else vb++;
   });
-  return { va, vb };
+  return { va, vb, setsA, setsB };
 }
 
 function renderDuels() {
   const container = document.getElementById('duels-container');
   container.innerHTML = DUELS.map(({ a, b }) => {
-    const { va, vb } = calcDuel(a, b);
+    const { va, vb, setsA, setsB } = calcDuel(a, b);
     const total = va + vb;
     const aLeads = va > vb, bLeads = vb > va;
     const aClass = aLeads ? 'leading' : bLeads ? 'trailing' : 'tied';
@@ -812,6 +841,9 @@ function renderDuels() {
       const diff = Math.abs(va - vb);
       footerText = `<span class="leader">${leader} lidera por ${diff}</span><span>${total} jogo${total > 1 ? 's' : ''}</span>`;
     }
+    const setsLine = (setsA + setsB) > 0
+      ? `<div class="duel-sets">Sets: <b>${setsA}</b> – <b>${setsB}</b></div>`
+      : '';
     return `
       <div class="duel-card">
         <div class="duel-title">Head-to-head</div>
@@ -826,6 +858,7 @@ function renderDuels() {
             <div class="duel-record ${bClass}">${vb}</div>
           </div>
         </div>
+        ${setsLine}
         <div class="duel-footer">${footerText}</div>
       </div>`;
   }).join('');

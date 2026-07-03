@@ -194,12 +194,20 @@
   .players-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; }
   .vs { padding-bottom: 12px; font-family: 'Archivo Black', sans-serif; color: var(--muted); }
 
-  /* Set row: label | score-a[tb] – score-b[tb] | × */
+  /* Set row: label | score-a[tb] – score-b[tb] | controlos */
   .set-row {
     display: flex;
     align-items: flex-start;
-    gap: 8px;
-    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    margin-bottom: 12px;
+  }
+  .set-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding-top: 8px;
   }
   .set-label {
     font-size: 12px; color: var(--muted); width: 44px;
@@ -241,7 +249,7 @@
   .btn-remove-set {
     background: none; border: none; color: var(--clay);
     cursor: pointer; font-size: 20px; line-height: 1;
-    padding: 8px 4px; flex-shrink: 0;
+    padding: 0 4px; flex-shrink: 0;
   }
 
   .set-row.is-super .set-label { color: var(--ball-dark); }
@@ -253,8 +261,7 @@
   .super-toggle {
     display: flex; align-items: center; gap: 5px;
     font-size: 11px; color: var(--muted); cursor: pointer;
-    padding-top: 12px; flex-shrink: 0; user-select: none;
-    white-space: nowrap;
+    flex-shrink: 0; user-select: none; white-space: nowrap;
   }
   .super-toggle input[type="checkbox"] { accent-color: var(--ball-dark); width: 14px; height: 14px; cursor: pointer; }
   .super-score-tag {
@@ -432,6 +439,43 @@
     padding: 14px 16px; border-radius: 11px; margin-bottom: 16px; font-size: 13.5px; line-height: 1.5;
   }
   code { background: rgba(0,0,0,.08); padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+
+  /* ---- Telemóvel ---- */
+  @media (max-width: 560px) {
+    h1 { font-size: 26px; }
+    .wrap { padding: 0 12px 50px; }
+    .field { padding: 12px 10px; }
+
+    /* Linha do set: score à esquerda, controlos numa segunda linha */
+    .set-row {
+      align-items: center;
+      row-gap: 4px;
+    }
+    .set-label { width: 38px; padding-top: 0; }
+    .set-col input { width: 52px; }
+    .set-controls {
+      width: 100%;
+      margin-left: 0;
+      padding-top: 2px;
+      padding-left: 38px;
+      justify-content: flex-start;
+      gap: 14px;
+    }
+    .super-toggle { font-size: 12px; }
+    .btn-remove-set { margin-left: auto; }
+
+    /* Bloco do tiebreak quebra por baixo do score se preciso */
+    .set-score-block { flex-wrap: wrap; row-gap: 6px; }
+    .tb-block { margin-left: 0 !important; }
+
+    /* Duelos: nomes e números um pouco mais pequenos */
+    .duel-name { font-size: 16px; }
+    .duel-record { font-size: 30px; }
+
+    /* Jogadores: reduzir o "vs" e o gap */
+    .players-row { gap: 6px; }
+    .vs { font-size: 13px; }
+  }
 </style>
 </head>
 <body>
@@ -662,10 +706,12 @@ function makeSetRow(n, container, vals) {
         <button type="button" class="tb-hide-btn" title="remover tiebreak">×</button>
       </div>
     </div>
-    <label class="super-toggle" title="Super-tiebreak (conta pontos, não games)">
-      <input type="checkbox" class="super-cb" ${isSuper ? 'checked' : ''}> Super-TB
-    </label>
-    <button class="btn-remove-set" title="remover set" onclick="this.parentElement.remove(); renumberSets('${container}');">×</button>
+    <div class="set-controls">
+      <label class="super-toggle" title="Super-tiebreak (conta pontos, não games)">
+        <input type="checkbox" class="super-cb" ${isSuper ? 'checked' : ''}> Super-TB
+      </label>
+      <button class="btn-remove-set" title="remover set" onclick="this.closest('.set-row').remove(); renumberSets('${container}');">×</button>
+    </div>
   `;
   row.querySelector('.tb-add-btn').addEventListener('click', () => showTbBlock(row));
   row.querySelector('.tb-hide-btn').addEventListener('click', () => hideTbBlock(row));

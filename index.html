@@ -244,7 +244,26 @@
     padding: 8px 4px; flex-shrink: 0;
   }
 
-  .btn-set {
+  .set-row.is-super .set-label { color: var(--ball-dark); }
+  .set-row.is-super .s-a,
+  .set-row.is-super .s-b {
+    border-color: var(--ball-dark);
+    background: #fafde8;
+  }
+  .super-toggle {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11px; color: var(--muted); cursor: pointer;
+    padding-top: 12px; flex-shrink: 0; user-select: none;
+    white-space: nowrap;
+  }
+  .super-toggle input[type="checkbox"] { accent-color: var(--ball-dark); width: 14px; height: 14px; cursor: pointer; }
+  .super-score-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: .5px;
+    color: var(--ball-dark); text-transform: uppercase;
+    background: #f0faa0; border-radius: 4px;
+    padding: 1px 5px; margin-left: 2px;
+  }
+
     background: none; border: 1.5px dashed var(--court);
     color: var(--court); padding: 9px; width: 100%;
     border-radius: 9px; font-weight: 600; cursor: pointer;
@@ -571,21 +590,40 @@ function fillSelects(p1id, p2id) {
 }
 
 // ---- Set row (reutilizável para form e modal) ----
-function isTiebreak(a, b) {
-  return (parseInt(a) === 7 && parseInt(b) === 6) || (parseInt(a) === 6 && parseInt(b) === 7);
+function isDiffOne(a, b) {
+  const na = parseInt(a), nb = parseInt(b);
+  return !isNaN(na) && !isNaN(nb) && Math.abs(na - nb) === 1;
 }
 
 function updateTbVisibility(row) {
   const a = row.querySelector('.s-a').value.trim();
   const b = row.querySelector('.s-b').value.trim();
   const tbBlock = row.querySelector('.tb-block');
-  if (isTiebreak(a, b)) {
+  const isSuper = row.querySelector('.super-cb').checked;
+  if (!isSuper && isDiffOne(a, b)) {
     tbBlock.style.display = 'flex';
   } else {
     tbBlock.style.display = 'none';
     row.querySelector('.s-tba').value = '';
     row.querySelector('.s-tbb').value = '';
   }
+}
+
+function toggleSuper(row) {
+  const isSuper = row.querySelector('.super-cb').checked;
+  const label = row.querySelector('.set-label');
+  const sA = row.querySelector('.s-a');
+  const sB = row.querySelector('.s-b');
+  if (isSuper) {
+    row.classList.add('is-super');
+    label.innerHTML = label.textContent.replace('Set', 'TB');
+    sA.placeholder = '10'; sB.placeholder = '7';
+  } else {
+    row.classList.remove('is-super');
+    label.innerHTML = label.textContent.replace('TB', 'Set');
+    sA.placeholder = '7'; sB.placeholder = '5';
+  }
+  updateTbVisibility(row);
 }
 
 function makeSetRow(n, container, vals) {
@@ -595,35 +633,43 @@ function makeSetRow(n, container, vals) {
   const sb = vals ? vals[1] : '';
   const tba = vals && vals[2] != null ? vals[2] : '';
   const tbb = vals && vals[3] != null ? vals[3] : '';
-  const showTb = isTiebreak(sa, sb);
+  const isSuper = vals && vals[4] === true;
+  const showTb = !isSuper && isDiffOne(sa, sb);
+  const labelText = isSuper ? `TB ${n}` : `Set ${n}`;
+  if (isSuper) row.classList.add('is-super');
   row.innerHTML = `
-    <span class="set-label">Set ${n}</span>
+    <span class="set-label">${labelText}</span>
     <div class="set-score-block">
       <div class="set-col">
-        <input type="text" inputmode="numeric" class="s-a" placeholder="7" maxlength="2" value="${sa}">
+        <input type="text" inputmode="numeric" class="s-a" placeholder="${isSuper ? '10' : '7'}" maxlength="2" value="${sa}">
       </div>
       <div class="set-dash-col"><span class="set-dash">–</span></div>
       <div class="set-col">
-        <input type="text" inputmode="numeric" class="s-b" placeholder="5" maxlength="2" value="${sb}">
+        <input type="text" inputmode="numeric" class="s-b" placeholder="${isSuper ? '7' : '5'}" maxlength="2" value="${sb}">
       </div>
       <div class="tb-block" style="display:${showTb ? 'flex' : 'none'}; align-items:center; gap:4px; margin-left:6px;">
-        <span class="tb-label" style="font-size:11px;color:var(--muted);white-space:nowrap;">TB</span>
+        <span style="font-size:11px;color:var(--muted);white-space:nowrap;">TB</span>
         <input type="text" inputmode="numeric" class="s-tba tb-mini" placeholder="–" maxlength="2" value="${tba}">
         <span style="color:var(--muted);font-size:12px;">-</span>
         <input type="text" inputmode="numeric" class="s-tbb tb-mini" placeholder="–" maxlength="2" value="${tbb}">
       </div>
     </div>
+    <label class="super-toggle" title="Super-tiebreak (conta pontos, não games)">
+      <input type="checkbox" class="super-cb" ${isSuper ? 'checked' : ''}> Super-TB
+    </label>
     <button class="btn-remove-set" title="remover" onclick="this.parentElement.remove(); renumberSets('${container}');">×</button>
   `;
-  // Listeners nos dois campos de score para mostrar/esconder TB
   row.querySelector('.s-a').addEventListener('input', () => updateTbVisibility(row));
   row.querySelector('.s-b').addEventListener('input', () => updateTbVisibility(row));
+  row.querySelector('.super-cb').addEventListener('change', () => toggleSuper(row));
   document.getElementById(container).appendChild(row);
 }
 
 function renumberSets(containerId) {
-  document.querySelectorAll(`#${containerId} .set-row .set-label`).forEach((el, i) => {
-    el.textContent = 'Set ' + (i + 1);
+  document.querySelectorAll(`#${containerId} .set-row`).forEach((row, i) => {
+    const label = row.querySelector('.set-label');
+    const isSuper = row.querySelector('.super-cb').checked;
+    label.textContent = (isSuper ? 'TB ' : 'Set ') + (i + 1);
   });
 }
 
@@ -636,12 +682,17 @@ function readSets(containerId) {
     if (a === '' && b === '') return;
     const na = parseInt(a, 10), nb = parseInt(b, 10);
     if (isNaN(na) || isNaN(nb)) { ok = false; return; }
-    const tba = row.querySelector('.s-tba').value.trim();
-    const tbb = row.querySelector('.s-tbb').value.trim();
-    const ntba = tba !== '' ? parseInt(tba, 10) : null;
-    const ntbb = tbb !== '' ? parseInt(tbb, 10) : null;
-    const hasTb = (ntba !== null && !isNaN(ntba)) || (ntbb !== null && !isNaN(ntbb));
-    sets.push(hasTb ? [na, nb, ntba ?? null, ntbb ?? null] : [na, nb]);
+    const isSuper = row.querySelector('.super-cb').checked;
+    if (isSuper) {
+      sets.push([na, nb, null, null, true]);
+    } else {
+      const tba = row.querySelector('.s-tba').value.trim();
+      const tbb = row.querySelector('.s-tbb').value.trim();
+      const ntba = tba !== '' ? parseInt(tba, 10) : null;
+      const ntbb = tbb !== '' ? parseInt(tbb, 10) : null;
+      const hasTb = (ntba !== null && !isNaN(ntba)) || (ntbb !== null && !isNaN(ntbb));
+      sets.push(hasTb ? [na, nb, ntba ?? null, ntbb ?? null] : [na, nb]);
+    }
   });
   return ok ? sets : null;
 }
@@ -653,26 +704,30 @@ document.getElementById('m-add-set').addEventListener('click', () => {
   makeSetRow(document.querySelectorAll('#m-sets .set-row').length + 1, 'm-sets', null);
 });
 
-// ---- Vencedor ----
-function decideWinner(m) {
-  let s1 = 0, s2 = 0;
-  m.sets.forEach(([a, b]) => { if (a > b) s1++; else if (b > a) s2++; });
-  if (s1 > s2) return m.player1;
-  if (s2 > s1) return m.player2;
-  return null;
-}
-
-// ---- Score formatado com tiebreak (7⁸-6⁶) ----
+// ---- Score formatado ----
 function fmtScore(sets) {
   return sets.map(s => {
-    const [a, b, tba, tbb] = s;
+    const [a, b, tba, tbb, isSuper] = s;
+    if (isSuper) return `<span style="color:var(--muted);font-size:.85em">[${a}-${b}]</span>`;
     const supA = (tba != null) ? `<sup>${tba}</sup>` : '';
     const supB = (tbb != null) ? `<sup>${tbb}</sup>` : '';
     return `${a}${supA}-${b}${supB}`;
   }).join('&nbsp; ');
 }
 
-// ---- Duelos ----
+// ---- Vencedor (ignora super-tiebreaks na contagem de sets) ----
+function decideWinner(m) {
+  let s1 = 0, s2 = 0;
+  m.sets.forEach(s => {
+    const [a, b, , , isSuper] = s;
+    if (isSuper) return; // super-TB não conta como set
+    if (a > b) s1++; else if (b > a) s2++;
+  });
+  if (s1 > s2) return m.player1;
+  if (s2 > s1) return m.player2;
+  return null;
+}
+
 function calcDuel(pa, pb) {
   let va = 0, vb = 0;
   matches.forEach(m => {

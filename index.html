@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ego on the Line</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎾</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600&family=Archivo+Black&display=swap" rel="stylesheet">
@@ -78,7 +79,6 @@
     letter-spacing: -.5px;
     text-transform: uppercase;
   }
-  .subtitle { color: rgba(244,247,242,.7); font-size: 13px; margin-top: 4px; letter-spacing: 3px; text-transform: uppercase; }
 
   /* ---- Abas ---- */
   nav.tabs {
@@ -118,42 +118,68 @@
     box-shadow: 0 6px 22px rgba(0,0,0,.18);
   }
 
-  /* ---- Classificação ---- */
-  .standings-head, .standings-row {
-    display: grid;
-    grid-template-columns: 26px 1fr 42px 42px 42px 54px;
-    align-items: center;
-    gap: 4px;
-    padding: 12px 14px;
+  /* ---- Duelos head-to-head ---- */
+  .duels { display: flex; flex-direction: column; gap: 14px; }
+
+  .duel-card {
+    background: var(--paper);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 6px 22px rgba(0,0,0,.18);
   }
-  .standings-head {
+  .duel-title {
+    background: var(--court-dark);
+    color: rgba(244,247,242,.75);
     font-size: 11px;
-    letter-spacing: .5px;
     text-transform: uppercase;
-    color: var(--muted);
-    border-bottom: 1.5px solid #dde6df;
+    letter-spacing: 2px;
+    padding: 8px 16px;
+    font-weight: 600;
   }
-  .standings-head .name { text-align: left; }
-  .standings-head span:not(.name) { text-align: center; }
-  .standings-row {
-    border-bottom: 1px solid #e6ede8;
-    font-size: 15px;
+  .duel-body {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 20px 16px 18px;
+    gap: 8px;
   }
-  .standings-row:last-child { border-bottom: none; }
-  .rank {
+  .duel-player { text-align: center; }
+  .duel-name {
     font-family: 'Archivo Black', sans-serif;
-    color: var(--muted);
-    font-size: 14px;
+    font-size: 18px;
+    color: var(--ink);
+    margin-bottom: 6px;
   }
-  .rank.top { color: var(--court); }
-  .player-name { font-weight: 600; }
-  .standings-row .v, .standings-row .d, .standings-row .pct {
-    text-align: center;
+  .duel-record {
+    font-size: 36px;
+    font-family: 'Archivo Black', sans-serif;
     font-variant-numeric: tabular-nums;
+    line-height: 1;
   }
-  .v { color: var(--court); font-weight: 600; }
-  .d { color: var(--clay); }
-  .pct { font-weight: 600; }
+  .duel-record.leading { color: var(--court); }
+  .duel-record.trailing { color: var(--clay); }
+  .duel-record.tied { color: var(--muted); }
+  .duel-sep {
+    font-family: 'Archivo Black', sans-serif;
+    color: #c8d6cb;
+    font-size: 22px;
+    text-align: center;
+    padding: 0 4px;
+  }
+  .duel-footer {
+    border-top: 1px solid #e6ede8;
+    padding: 10px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+  .duel-footer .leader {
+    font-weight: 600;
+    color: var(--court);
+  }
+  .duel-footer .tied-label { color: var(--muted); font-style: italic; }
 
   /* ---- Formulário ---- */
   .field { padding: 14px; }
@@ -185,6 +211,11 @@
   .set-row .set-label { font-size: 12px; color: var(--muted); width: 48px; font-weight: 600; }
   .set-row input { width: 70px; text-align: center; }
   .set-dash { font-weight: 700; color: var(--muted); }
+  .tb-wrap { display: flex; align-items: center; gap: 4px; margin-left: 4px; }
+  .tb-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
+  .tb-input { width: 46px !important; font-size: 13px !important; padding: 8px 6px !important; text-align: center; }
+  sup.tb { font-size: 0.6em; vertical-align: super; color: var(--muted); font-family: 'Archivo', sans-serif; font-weight: 600; }
+
   .btn-set {
     background: none; border: 1.5px dashed var(--court);
     color: var(--court); padding: 9px; width: 100%;
@@ -261,7 +292,6 @@
   <div class="header-inner">
     <div class="ball"></div>
     <h1>Ego on the Line</h1>
-    <div class="subtitle">🎾 &nbsp;Quem é que manda?</div>
   </div>
 </header>
 
@@ -277,7 +307,7 @@
 
   <!-- ===== CLASSIFICAÇÃO ===== -->
   <section class="panel active" id="standings">
-    <div class="card" id="standings-card">
+    <div class="duels" id="duels-container">
       <div class="loading">A carregar...</div>
     </div>
   </section>
@@ -383,11 +413,16 @@ function addSetRow(n) {
   const wrap = document.getElementById('sets');
   const row = document.createElement('div');
   row.className = 'set-row';
+  row.style.flexWrap = 'wrap';
   row.innerHTML = `
     <span class="set-label">Set ${n}</span>
     <input type="text" inputmode="numeric" class="s-a" placeholder="7" maxlength="2">
     <span class="set-dash">–</span>
     <input type="text" inputmode="numeric" class="s-b" placeholder="5" maxlength="2">
+    <div class="tb-wrap">
+      <span class="tb-label">TB</span>
+      <input type="text" inputmode="numeric" class="s-tb tb-input" placeholder="–" maxlength="2" title="Pontos do perdedor no tiebreak (opcional)">
+    </div>
     <button class="btn-remove-set" title="remover" onclick="this.parentElement.remove(); renumberSets();">×</button>
   `;
   wrap.appendChild(row);
@@ -410,45 +445,62 @@ function decideWinner(m) {
   return null; // empate: não conta para ninguém
 }
 
-// ---- Classificação ----
-function renderStandings() {
-  const stats = {};
-  PLAYERS.forEach(p => stats[p] = { v: 0, d: 0 });
+// ---- Duelos head-to-head ----
+const DUELS = [
+  { a: 'Rodrigo', b: 'Malheiro' },
+  { a: 'Rodrigo', b: 'André' },
+];
 
+function calcDuel(pa, pb) {
+  let va = 0, vb = 0;
   matches.forEach(m => {
+    const players = [m.player1, m.player2];
+    if (!players.includes(pa) || !players.includes(pb)) return;
     const w = decideWinner(m);
-    if (!w) return; // empate ignorado
-    const loser = w === m.player1 ? m.player2 : m.player1;
-    if (stats[w]) stats[w].v++;
-    if (stats[loser]) stats[loser].d++;
+    if (!w) return;
+    if (w === pa) va++; else vb++;
   });
+  return { va, vb };
+}
 
-  const rows = PLAYERS.map(p => {
-    const { v, d } = stats[p];
-    const total = v + d;
-    const pct = total ? Math.round((v / total) * 100) : 0;
-    return { p, v, d, pct, total };
-  }).sort((a, b) => b.v - a.v || b.pct - a.pct || a.d - b.d);
+function renderDuels() {
+  const container = document.getElementById('duels-container');
+  container.innerHTML = DUELS.map(({ a, b }) => {
+    const { va, vb } = calcDuel(a, b);
+    const total = va + vb;
+    const aLeads = va > vb, bLeads = vb > va, tied = va === vb;
 
-  let html = `
-    <div class="standings-head">
-      <span></span><span class="name">Jogador</span>
-      <span>V</span><span>D</span><span>Jogos</span><span>%Vit</span>
-    </div>`;
+    const aClass = aLeads ? 'leading' : bLeads ? 'trailing' : 'tied';
+    const bClass = bLeads ? 'leading' : aLeads ? 'trailing' : 'tied';
 
-  rows.forEach((r, i) => {
-    html += `
-      <div class="standings-row">
-        <span class="rank ${i === 0 && r.total > 0 ? 'top' : ''}">${i + 1}</span>
-        <span class="player-name">${r.p}</span>
-        <span class="v">${r.v}</span>
-        <span class="d">${r.d}</span>
-        <span>${r.total}</span>
-        <span class="pct">${r.total ? r.pct + '%' : '–'}</span>
+    let footerText;
+    if (total === 0) {
+      footerText = `<span class="tied-label">Ainda sem jogos</span>`;
+    } else if (tied) {
+      footerText = `<span class="tied-label">Empatados — ${va}-${vb}</span><span>${total} jogo${total > 1 ? 's' : ''}</span>`;
+    } else {
+      const leader = aLeads ? a : b;
+      const diff = Math.abs(va - vb);
+      footerText = `<span class="leader">${leader} lidera por ${diff}</span><span>${total} jogo${total > 1 ? 's' : ''}</span>`;
+    }
+
+    return `
+      <div class="duel-card">
+        <div class="duel-title">Head-to-head</div>
+        <div class="duel-body">
+          <div class="duel-player">
+            <div class="duel-name">${a}</div>
+            <div class="duel-record ${aClass}">${va}</div>
+          </div>
+          <div class="duel-sep">–</div>
+          <div class="duel-player">
+            <div class="duel-name">${b}</div>
+            <div class="duel-record ${bClass}">${vb}</div>
+          </div>
+        </div>
+        <div class="duel-footer">${footerText}</div>
       </div>`;
-  });
-
-  document.getElementById('standings-card').innerHTML = html;
+  }).join('');
 }
 
 // ---- Histórico ----
@@ -473,7 +525,13 @@ function renderHistory() {
     const w = decideWinner(m);
     const p1cls = w === m.player1 ? 'win' : (w === null ? 'draw' : '');
     const p2cls = w === m.player2 ? 'win' : (w === null ? 'draw' : '');
-    const score = m.sets.map(([a, b]) => `${a}-${b}`).join('  ');
+    const score = m.sets.map(s => {
+      const [a, b, tb] = s;
+      if (tb === undefined || tb === null) return `${a}-${b}`;
+      // tb é os pontos do perdedor; o perdedor do set é quem tem o score mais baixo
+      if (a > b) return `${a}-${b}<sup class="tb">${tb}</sup>`;
+      else        return `${a}<sup class="tb">${tb}</sup>-${b}`;
+    }).join('  ');
     const meta = [];
     if (m.location) meta.push('📍 ' + m.location);
     if (m.played_at) meta.push(fmtDate(m.played_at));
@@ -504,12 +562,12 @@ async function loadMatches() {
     .order('created_at', { ascending: false });
 
   if (error) {
-    document.getElementById('standings-card').innerHTML =
-      `<div class="empty">Erro a ligar à base de dados.<br>Confirma as chaves e a tabela.</div>`;
+    document.getElementById('duels-container').innerHTML =
+      `<div class="empty" style="color:var(--line)">Erro a ligar à base de dados.<br>Confirma as chaves e a tabela.</div>`;
     return;
   }
   matches = data || [];
-  renderStandings();
+  renderDuels();
   renderHistory();
 }
 
@@ -532,7 +590,9 @@ document.getElementById('submit').addEventListener('click', async () => {
     if (a === '' && b === '') return;
     const na = parseInt(a, 10), nb = parseInt(b, 10);
     if (isNaN(na) || isNaN(nb)) { ok = false; return; }
-    sets.push([na, nb]);
+    const tbVal = row.querySelector('.s-tb').value.trim();
+    const ntb = tbVal !== '' ? parseInt(tbVal, 10) : null;
+    sets.push(ntb !== null && !isNaN(ntb) ? [na, nb, ntb] : [na, nb]);
   });
 
   if (!ok || sets.length === 0) {
@@ -605,8 +665,8 @@ function init() {
         <code>SUPABASE_URL</code> e a <code>SUPABASE_KEY</code> no topo do
         &lt;script&gt;. Depois disso a app começa a guardar os jogos.
       </div>`;
-    document.getElementById('standings-card').innerHTML =
-      `<div class="empty">À espera das chaves do Supabase.</div>`;
+    document.getElementById('duels-container').innerHTML =
+      `<div class="empty" style="color:var(--line)">À espera das chaves do Supabase.</div>`;
     document.getElementById('history-list').innerHTML =
       `<div class="empty">À espera das chaves do Supabase.</div>`;
     return;

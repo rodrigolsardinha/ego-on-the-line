@@ -4,27 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ego on the Line</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎾</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23d9f24a'/><path d='M50 4 Q18 22 18 50 Q18 78 50 96' fill='none' stroke='white' stroke-width='7' stroke-linecap='round'/><path d='M50 4 Q82 22 82 50 Q82 78 50 96' fill='none' stroke='white' stroke-width='7' stroke-linecap='round'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;600&family=Archivo+Black&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  /* ============================================================
-     ==  CONFIGURAÇÃO: cola aqui as tuas 2 chaves do Supabase  ==
-     ==  (estão logo abaixo, no <script>, procura SUPABASE_URL) ==
-     ============================================================ */
-
   :root {
-    --court: #2f7d4f;        /* verde relva do court */
+    --court: #2f7d4f;
     --court-dark: #256540;
-    --line: #f4f7f2;         /* linhas brancas */
-    --ball: #d9f24a;         /* amarelo-ténis, cor de assinatura */
+    --line: #f4f7f2;
+    --ball: #d9f24a;
     --ball-dark: #b9d024;
     --ink: #14251a;
     --paper: #f4f7f2;
     --muted: #6b8574;
-    --clay: #c96a4a;         /* terra batida, para derrotas */
+    --clay: #c96a4a;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -39,7 +34,6 @@
 
   .wrap { max-width: 640px; margin: 0 auto; padding: 0 16px 60px; }
 
-  /* ---- Cabeçalho: faixa de court ---- */
   header {
     background: var(--court);
     border-bottom: 3px solid var(--line);
@@ -48,7 +42,6 @@
     overflow: hidden;
   }
   header::before {
-    /* linha central do court */
     content: "";
     position: absolute;
     left: 50%; top: 0; bottom: 0;
@@ -80,7 +73,6 @@
     text-transform: uppercase;
   }
 
-  /* ---- Abas ---- */
   nav.tabs {
     display: flex;
     gap: 6px;
@@ -110,7 +102,6 @@
   .panel { display: none; }
   .panel.active { display: block; }
 
-  /* ---- Cartão base ---- */
   .card {
     background: var(--paper);
     border-radius: 14px;
@@ -118,9 +109,8 @@
     box-shadow: 0 6px 22px rgba(0,0,0,.18);
   }
 
-  /* ---- Duelos head-to-head ---- */
+  /* ---- Duelos ---- */
   .duels { display: flex; flex-direction: column; gap: 14px; }
-
   .duel-card {
     background: var(--paper);
     border-radius: 14px;
@@ -175,10 +165,7 @@
     font-size: 12.5px;
     color: var(--muted);
   }
-  .duel-footer .leader {
-    font-weight: 600;
-    color: var(--court);
-  }
+  .duel-footer .leader { font-weight: 600; color: var(--court); }
   .duel-footer .tied-label { color: var(--muted); font-style: italic; }
 
   /* ---- Formulário ---- */
@@ -207,24 +194,61 @@
   .players-row { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; }
   .vs { padding-bottom: 12px; font-family: 'Archivo Black', sans-serif; color: var(--muted); }
 
-  .set-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-  .set-row .set-label { font-size: 12px; color: var(--muted); width: 48px; font-weight: 600; }
-  .set-row input { width: 70px; text-align: center; }
-  .set-dash { font-weight: 700; color: var(--muted); }
-  .tb-wrap { display: flex; align-items: center; gap: 4px; margin-left: 4px; }
-  .tb-label { font-size: 11px; color: var(--muted); white-space: nowrap; }
-  .tb-input { width: 46px !important; font-size: 13px !important; padding: 8px 6px !important; text-align: center; }
-  sup.tb { font-size: 0.6em; vertical-align: super; color: var(--muted); font-family: 'Archivo', sans-serif; font-weight: 600; }
+  /* Set row: label | score-a[tb] – score-b[tb] | × */
+  .set-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .set-label {
+    font-size: 12px; color: var(--muted); width: 44px;
+    font-weight: 600; padding-top: 14px; flex-shrink: 0;
+  }
+  .set-score-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 4px;
+    flex: 1;
+  }
+  .set-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .set-col input {
+    width: 56px;
+    text-align: center;
+    padding: 9px 4px;
+    font-size: 15px;
+  }
+  .set-col .tb-mini {
+    width: 56px;
+    text-align: center;
+    padding: 6px 4px;
+    font-size: 12px;
+    border-color: #e0e8e2;
+    color: var(--muted);
+  }
+  .tb-mini::placeholder { color: #bbb; }
+  .set-dash-col {
+    display: flex;
+    align-items: center;
+    padding-top: 10px;
+  }
+  .set-dash { font-weight: 700; color: var(--muted); font-size: 16px; }
+  .btn-remove-set {
+    background: none; border: none; color: var(--clay);
+    cursor: pointer; font-size: 20px; line-height: 1;
+    padding: 8px 4px; flex-shrink: 0;
+  }
 
   .btn-set {
     background: none; border: 1.5px dashed var(--court);
     color: var(--court); padding: 9px; width: 100%;
     border-radius: 9px; font-weight: 600; cursor: pointer;
     font-family: 'Archivo', sans-serif; font-size: 13px; margin-top: 4px;
-  }
-  .btn-remove-set {
-    background: none; border: none; color: var(--clay);
-    cursor: pointer; font-size: 18px; line-height: 1; padding: 4px 8px;
   }
   .time-note { font-size: 11px; color: var(--muted); margin-top: 4px; font-style: italic; }
 
@@ -259,7 +283,7 @@
     box-shadow: 0 3px 12px rgba(0,0,0,.12);
   }
   .match-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-  .match-players { font-weight: 600; font-size: 15.5px; }
+  .match-players { font-weight: 600; font-size: 15.5px; flex: 1; }
   .match-players .win { color: var(--court); }
   .match-players .draw { color: var(--muted); }
   .match-score {
@@ -269,6 +293,9 @@
     letter-spacing: .5px;
     white-space: nowrap;
   }
+  /* tiebreak inline no score */
+  .match-score sup { font-size: 0.6em; vertical-align: super; color: var(--muted); font-weight: 700; }
+
   .match-meta { color: var(--muted); font-size: 12.5px; margin-top: 6px; display: flex; gap: 10px; flex-wrap: wrap; }
   .tag-draw {
     display: inline-block; background: #e6ede8; color: var(--muted);
@@ -276,9 +303,99 @@
     padding: 2px 7px; border-radius: 5px; font-weight: 600; margin-left: 6px;
   }
 
+  /* ---- Ações do jogo (editar/eliminar) ---- */
+  .match-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #e6ede8;
+  }
+  .btn-action {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    font-family: 'Archivo', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid transparent;
+    transition: opacity .15s;
+  }
+  .btn-action:hover { opacity: .8; }
+  .btn-edit {
+    background: #eaf3ec;
+    color: var(--court);
+    border-color: #c5ddc9;
+  }
+  .btn-delete {
+    background: #fbeee9;
+    color: var(--clay);
+    border-color: #f0c9bc;
+  }
+
+  /* ---- Modal de edição ---- */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(20,37,26,.55);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--paper);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,.35);
+  }
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 18px 12px;
+    border-bottom: 1px solid #e6ede8;
+  }
+  .modal-title {
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 16px;
+    color: var(--ink);
+  }
+  .btn-close {
+    background: none; border: none; cursor: pointer;
+    font-size: 22px; color: var(--muted); line-height: 1;
+  }
+  .modal-body { padding: 16px 18px; }
+  .modal-footer {
+    padding: 12px 18px 16px;
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid #e6ede8;
+  }
+  .btn-secondary {
+    flex: 1; padding: 12px;
+    background: #e6ede8; color: var(--ink);
+    border: none; border-radius: 9px;
+    font-family: 'Archivo', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+  }
+  .btn-save {
+    flex: 2; padding: 12px;
+    background: var(--ball); color: var(--ink);
+    border: none; border-radius: 9px;
+    font-family: 'Archivo Black', sans-serif;
+    font-size: 14px; text-transform: uppercase;
+    cursor: pointer;
+  }
+
   .empty { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 14.5px; }
   .loading { text-align: center; color: rgba(244,247,242,.8); padding: 30px; }
-
   .config-warn {
     background: #fff3cd; color: #7a5b00; border: 1.5px solid #ffe08a;
     padding: 14px 16px; border-radius: 11px; margin-bottom: 16px; font-size: 13.5px; line-height: 1.5;
@@ -305,14 +422,14 @@
 
   <div id="config-warn"></div>
 
-  <!-- ===== CLASSIFICAÇÃO ===== -->
+  <!-- CLASSIFICAÇÃO -->
   <section class="panel active" id="standings">
     <div class="duels" id="duels-container">
       <div class="loading">A carregar...</div>
     </div>
   </section>
 
-  <!-- ===== NOVO JOGO ===== -->
+  <!-- NOVO JOGO -->
   <section class="panel" id="add">
     <div class="card">
       <div class="field">
@@ -330,7 +447,7 @@
       </div>
 
       <div class="field">
-        <label>Resultado (por sets)</label>
+        <label>Resultado por sets (TB = pontos no tiebreak, opcional)</label>
         <div id="sets"></div>
         <button class="btn-set" id="add-set">+ adicionar set</button>
       </div>
@@ -359,7 +476,7 @@
     </div>
   </section>
 
-  <!-- ===== HISTÓRICO ===== -->
+  <!-- HISTÓRICO -->
   <section class="panel" id="history">
     <div id="history-list">
       <div class="loading">A carregar...</div>
@@ -368,24 +485,69 @@
 
 </div>
 
+<!-- MODAL EDITAR -->
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Editar jogo</span>
+      <button class="btn-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="field" style="padding:0 0 14px">
+        <div class="players-row">
+          <div>
+            <label>Jogador 1</label>
+            <select id="m-p1"></select>
+          </div>
+          <div class="vs">vs</div>
+          <div>
+            <label>Jogador 2</label>
+            <select id="m-p2"></select>
+          </div>
+        </div>
+      </div>
+      <div class="field" style="padding:0 0 14px">
+        <label>Resultado por sets</label>
+        <div id="m-sets"></div>
+        <button class="btn-set" id="m-add-set">+ adicionar set</button>
+      </div>
+      <div class="field" style="padding:0 0 14px">
+        <label>Local</label>
+        <select id="m-location-select" onchange="handleMLocationSelect(this.value)">
+          <option value="Varatojo">Varatojo</option>
+          <option value="Turcifal">Turcifal</option>
+          <option value="Clube TV">Clube TV</option>
+          <option value="outro">Outro...</option>
+        </select>
+        <input type="text" id="m-location-other" placeholder="Qual o local?" style="display:none; margin-top:8px;">
+      </div>
+      <div class="field" style="padding:0">
+        <label>Data e hora</label>
+        <input type="datetime-local" id="m-played_at">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-secondary" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" id="m-save">Guardar</button>
+    </div>
+  </div>
+</div>
+
 <script>
-/* ============================================================
-   ==            COLA AQUI AS TUAS 2 CHAVES                  ==
-   ==  Supabase → Project Settings → API                     ==
-   ============================================================ */
 const SUPABASE_URL = "https://cpnkgnfevlgkkhcjnwqb.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNwbmtnbmZldmxna2toY2pud3FiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjMxMTAsImV4cCI6MjA5ODYzOTExMH0.M-MgmKwwAS0Pzo-kASiQnJMQ9o1CplejpMOOZCwEglM";
-
-/* Os jogadores da liga. Muda os nomes se quiseres. */
 const PLAYERS = ["Rodrigo", "Malheiro", "André"];
-
-/* ============================================================ */
+const DUELS = [
+  { a: 'Rodrigo', b: 'Malheiro' },
+  { a: 'Rodrigo', b: 'André' },
+];
 
 const configured = !SUPABASE_URL.startsWith("COLA_") && !SUPABASE_KEY.startsWith("COLA_");
 let db = null;
 if (configured) db = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let matches = [];
+let editingId = null;
 
 // ---- Abas ----
 document.querySelectorAll('.tab').forEach(tab => {
@@ -397,10 +559,11 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// ---- Preencher selects de jogadores ----
-function fillPlayerSelects() {
-  const p1 = document.getElementById('p1');
-  const p2 = document.getElementById('p2');
+// ---- Jogadores nos selects ----
+function fillSelects(p1id, p2id) {
+  const p1 = document.getElementById(p1id);
+  const p2 = document.getElementById(p2id);
+  p1.innerHTML = ''; p2.innerHTML = '';
   PLAYERS.forEach(name => {
     p1.add(new Option(name, name));
     p2.add(new Option(name, name));
@@ -408,49 +571,84 @@ function fillPlayerSelects() {
   p2.selectedIndex = 1;
 }
 
-// ---- Sets dinâmicos ----
-function addSetRow(n) {
-  const wrap = document.getElementById('sets');
+// ---- Set row (reutilizável para form e modal) ----
+function makeSetRow(n, container, vals) {
   const row = document.createElement('div');
   row.className = 'set-row';
-  row.style.flexWrap = 'wrap';
+  const sa = vals ? vals[0] : '';
+  const sb = vals ? vals[1] : '';
+  const tba = vals && vals[2] != null ? vals[2] : '';
+  const tbb = vals && vals[3] != null ? vals[3] : '';
   row.innerHTML = `
     <span class="set-label">Set ${n}</span>
-    <input type="text" inputmode="numeric" class="s-a" placeholder="7" maxlength="2">
-    <span class="set-dash">–</span>
-    <input type="text" inputmode="numeric" class="s-b" placeholder="5" maxlength="2">
-    <div class="tb-wrap">
-      <span class="tb-label">TB</span>
-      <input type="text" inputmode="numeric" class="s-tb tb-input" placeholder="–" maxlength="2" title="Pontos do perdedor no tiebreak (opcional)">
+    <div class="set-score-block">
+      <div class="set-col">
+        <input type="text" inputmode="numeric" class="s-a" placeholder="7" maxlength="2" value="${sa}">
+        <input type="text" inputmode="numeric" class="s-tba tb-mini" placeholder="TB" maxlength="2" value="${tba}">
+      </div>
+      <div class="set-dash-col"><span class="set-dash">–</span></div>
+      <div class="set-col">
+        <input type="text" inputmode="numeric" class="s-b" placeholder="5" maxlength="2" value="${sb}">
+        <input type="text" inputmode="numeric" class="s-tbb tb-mini" placeholder="TB" maxlength="2" value="${tbb}">
+      </div>
     </div>
-    <button class="btn-remove-set" title="remover" onclick="this.parentElement.remove(); renumberSets();">×</button>
+    <button class="btn-remove-set" title="remover" onclick="this.parentElement.remove(); renumberSets('${container}');">×</button>
   `;
-  wrap.appendChild(row);
+  document.getElementById(container).appendChild(row);
 }
-function renumberSets() {
-  document.querySelectorAll('#sets .set-row .set-label').forEach((el, i) => {
+
+function renumberSets(containerId) {
+  document.querySelectorAll(`#${containerId} .set-row .set-label`).forEach((el, i) => {
     el.textContent = 'Set ' + (i + 1);
   });
 }
+
+function readSets(containerId) {
+  const sets = [];
+  let ok = true;
+  document.querySelectorAll(`#${containerId} .set-row`).forEach(row => {
+    const a = row.querySelector('.s-a').value.trim();
+    const b = row.querySelector('.s-b').value.trim();
+    if (a === '' && b === '') return;
+    const na = parseInt(a, 10), nb = parseInt(b, 10);
+    if (isNaN(na) || isNaN(nb)) { ok = false; return; }
+    const tba = row.querySelector('.s-tba').value.trim();
+    const tbb = row.querySelector('.s-tbb').value.trim();
+    const ntba = tba !== '' ? parseInt(tba, 10) : null;
+    const ntbb = tbb !== '' ? parseInt(tbb, 10) : null;
+    const hasTb = (ntba !== null && !isNaN(ntba)) || (ntbb !== null && !isNaN(ntbb));
+    sets.push(hasTb ? [na, nb, ntba ?? null, ntbb ?? null] : [na, nb]);
+  });
+  return ok ? sets : null;
+}
+
 document.getElementById('add-set').addEventListener('click', () => {
-  addSetRow(document.querySelectorAll('#sets .set-row').length + 1);
+  makeSetRow(document.querySelectorAll('#sets .set-row').length + 1, 'sets', null);
+});
+document.getElementById('m-add-set').addEventListener('click', () => {
+  makeSetRow(document.querySelectorAll('#m-sets .set-row').length + 1, 'm-sets', null);
 });
 
-// ---- Calcular vencedor a partir dos sets ----
+// ---- Vencedor ----
 function decideWinner(m) {
   let s1 = 0, s2 = 0;
   m.sets.forEach(([a, b]) => { if (a > b) s1++; else if (b > a) s2++; });
   if (s1 > s2) return m.player1;
   if (s2 > s1) return m.player2;
-  return null; // empate: não conta para ninguém
+  return null;
 }
 
-// ---- Duelos head-to-head ----
-const DUELS = [
-  { a: 'Rodrigo', b: 'Malheiro' },
-  { a: 'Rodrigo', b: 'André' },
-];
+// ---- Score formatado com tiebreak (7⁸-6⁶) ----
+function fmtScore(sets) {
+  return sets.map(s => {
+    const [a, b, tba, tbb] = s;
+    const supA = (tba != null) ? `<sup>${tba}</sup>` : '';
+    const supB = (tbb != null) ? `<sup>${tbb}</sup>` : '';
+    return `${a}${supA}-${b}${supB}`;
+  }).join('&nbsp; ');
+}
 
+// ---- Duelos ----
 function calcDuel(pa, pb) {
   let va = 0, vb = 0;
   matches.forEach(m => {
@@ -468,22 +666,19 @@ function renderDuels() {
   container.innerHTML = DUELS.map(({ a, b }) => {
     const { va, vb } = calcDuel(a, b);
     const total = va + vb;
-    const aLeads = va > vb, bLeads = vb > va, tied = va === vb;
-
+    const aLeads = va > vb, bLeads = vb > va;
     const aClass = aLeads ? 'leading' : bLeads ? 'trailing' : 'tied';
     const bClass = bLeads ? 'leading' : aLeads ? 'trailing' : 'tied';
-
     let footerText;
     if (total === 0) {
       footerText = `<span class="tied-label">Ainda sem jogos</span>`;
-    } else if (tied) {
+    } else if (va === vb) {
       footerText = `<span class="tied-label">Empatados — ${va}-${vb}</span><span>${total} jogo${total > 1 ? 's' : ''}</span>`;
     } else {
       const leader = aLeads ? a : b;
       const diff = Math.abs(va - vb);
       footerText = `<span class="leader">${leader} lidera por ${diff}</span><span>${total} jogo${total > 1 ? 's' : ''}</span>`;
     }
-
     return `
       <div class="duel-card">
         <div class="duel-title">Head-to-head</div>
@@ -520,22 +715,14 @@ function renderHistory() {
     list.innerHTML = `<div class="empty">Ainda não há jogos.<br>Regista o primeiro na aba "Novo jogo".</div>`;
     return;
   }
-
   list.innerHTML = matches.map(m => {
     const w = decideWinner(m);
     const p1cls = w === m.player1 ? 'win' : (w === null ? 'draw' : '');
     const p2cls = w === m.player2 ? 'win' : (w === null ? 'draw' : '');
-    const score = m.sets.map(s => {
-      const [a, b, tb] = s;
-      if (tb === undefined || tb === null) return `${a}-${b}`;
-      // tb é os pontos do perdedor; o perdedor do set é quem tem o score mais baixo
-      if (a > b) return `${a}-${b}<sup class="tb">${tb}</sup>`;
-      else        return `${a}<sup class="tb">${tb}</sup>-${b}`;
-    }).join('  ');
+    const score = fmtScore(m.sets);
     const meta = [];
     if (m.location) meta.push('📍 ' + m.location);
     if (m.played_at) meta.push(fmtDate(m.played_at));
-
     return `
       <div class="match">
         <div class="match-top">
@@ -548,6 +735,10 @@ function renderHistory() {
           <div class="match-score">${score}</div>
         </div>
         ${meta.length ? `<div class="match-meta">${meta.map(x => `<span>${x}</span>`).join('')}</div>` : ''}
+        <div class="match-actions">
+          <button class="btn-action btn-edit" onclick="openEdit(${m.id})">✏️ Editar</button>
+          <button class="btn-action btn-delete" onclick="deleteMatch(${m.id})">🗑 Eliminar</button>
+        </div>
       </div>`;
   }).join('');
 }
@@ -560,10 +751,9 @@ async function loadMatches() {
     .select('*')
     .order('played_at', { ascending: false, nullsFirst: false })
     .order('created_at', { ascending: false });
-
   if (error) {
     document.getElementById('duels-container').innerHTML =
-      `<div class="empty" style="color:var(--line)">Erro a ligar à base de dados.<br>Confirma as chaves e a tabela.</div>`;
+      `<div class="empty" style="color:var(--line)">Erro a ligar à base de dados.</div>`;
     return;
   }
   matches = data || [];
@@ -571,79 +761,140 @@ async function loadMatches() {
   renderHistory();
 }
 
-// ---- Submeter jogo ----
+// ---- Submeter novo jogo ----
 document.getElementById('submit').addEventListener('click', async () => {
   const msg = document.getElementById('form-msg');
   const btn = document.getElementById('submit');
-  msg.className = 'form-msg';
-  msg.textContent = '';
+  msg.className = 'form-msg'; msg.textContent = '';
 
   const p1 = document.getElementById('p1').value;
   const p2 = document.getElementById('p2').value;
   if (p1 === p2) { msg.className = 'form-msg err'; msg.textContent = 'Escolhe dois jogadores diferentes.'; return; }
 
-  const sets = [];
-  let ok = true;
-  document.querySelectorAll('#sets .set-row').forEach(row => {
-    const a = row.querySelector('.s-a').value.trim();
-    const b = row.querySelector('.s-b').value.trim();
-    if (a === '' && b === '') return;
-    const na = parseInt(a, 10), nb = parseInt(b, 10);
-    if (isNaN(na) || isNaN(nb)) { ok = false; return; }
-    const tbVal = row.querySelector('.s-tb').value.trim();
-    const ntb = tbVal !== '' ? parseInt(tbVal, 10) : null;
-    sets.push(ntb !== null && !isNaN(ntb) ? [na, nb, ntb] : [na, nb]);
-  });
-
-  if (!ok || sets.length === 0) {
+  const sets = readSets('sets');
+  if (!sets || sets.length === 0) {
     msg.className = 'form-msg err';
     msg.textContent = 'Preenche pelo menos um set com números válidos.';
     return;
   }
 
   const record = {
-    player1: p1,
-    player2: p2,
-    sets: sets,
+    player1: p1, player2: p2, sets,
     location: getLocation(),
     played_at: document.getElementById('played_at').value || null,
   };
 
   btn.disabled = true;
-  msg.className = 'form-msg';
   msg.textContent = 'A guardar...';
-
   const { error } = await db.from('matches').insert(record);
   btn.disabled = false;
 
-  if (error) {
-    msg.className = 'form-msg err';
-    msg.textContent = 'Não deu para guardar. Tenta outra vez.';
-    return;
-  }
+  if (error) { msg.className = 'form-msg err'; msg.textContent = 'Não deu para guardar. Tenta outra vez.'; return; }
 
   msg.className = 'form-msg ok';
   msg.textContent = 'Jogo registado! 🎾';
   resetLocation();
   document.getElementById('played_at').value = '';
   document.getElementById('sets').innerHTML = '';
-  addSetRow(1); addSetRow(2);
+  makeSetRow(1, 'sets', null); makeSetRow(2, 'sets', null);
   await loadMatches();
   setTimeout(() => { msg.textContent = ''; }, 2500);
 });
 
-// ---- Local: dropdown + "Outro" ----
+// ---- Eliminar jogo ----
+async function deleteMatch(id) {
+  if (!confirm('Tens a certeza que queres eliminar este jogo?')) return;
+  const { error } = await db.from('matches').delete().eq('id', id);
+  if (error) { alert('Não deu para eliminar. Tenta outra vez.'); return; }
+  await loadMatches();
+}
+
+// ---- Modal de edição ----
+function openEdit(id) {
+  const m = matches.find(x => x.id === id);
+  if (!m) return;
+  editingId = id;
+
+  // Preencher jogadores
+  fillSelects('m-p1', 'm-p2');
+  document.getElementById('m-p1').value = m.player1;
+  document.getElementById('m-p2').value = m.player2;
+
+  // Preencher sets
+  document.getElementById('m-sets').innerHTML = '';
+  m.sets.forEach((s, i) => makeSetRow(i + 1, 'm-sets', s));
+
+  // Local
+  const loc = m.location || 'Varatojo';
+  const locSel = document.getElementById('m-location-select');
+  const locOther = document.getElementById('m-location-other');
+  const knownLocs = ['Varatojo', 'Turcifal', 'Clube TV'];
+  if (knownLocs.includes(loc)) {
+    locSel.value = loc;
+    locOther.style.display = 'none';
+  } else {
+    locSel.value = 'outro';
+    locOther.style.display = 'block';
+    locOther.value = loc;
+  }
+
+  // Data/hora
+  const pat = document.getElementById('m-played_at');
+  pat.value = m.played_at ? m.played_at.slice(0, 16) : '';
+
+  document.getElementById('edit-modal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+  editingId = null;
+}
+
+// Fechar modal ao clicar fora
+document.getElementById('edit-modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+document.getElementById('m-save').addEventListener('click', async () => {
+  if (!editingId) return;
+  const p1 = document.getElementById('m-p1').value;
+  const p2 = document.getElementById('m-p2').value;
+  if (p1 === p2) { alert('Escolhe dois jogadores diferentes.'); return; }
+
+  const sets = readSets('m-sets');
+  if (!sets || sets.length === 0) { alert('Preenche pelo menos um set com números válidos.'); return; }
+
+  const locSel = document.getElementById('m-location-select').value;
+  const location = locSel === 'outro'
+    ? (document.getElementById('m-location-other').value.trim() || null)
+    : locSel;
+  const played_at = document.getElementById('m-played_at').value || null;
+
+  const btn = document.getElementById('m-save');
+  btn.disabled = true; btn.textContent = 'A guardar...';
+
+  const { error } = await db.from('matches').update({ player1: p1, player2: p2, sets, location, played_at }).eq('id', editingId);
+  btn.disabled = false; btn.textContent = 'Guardar';
+
+  if (error) { alert('Não deu para guardar. Tenta outra vez.'); return; }
+  closeModal();
+  await loadMatches();
+});
+
+// ---- Local ----
 function handleLocationSelect(val) {
   const other = document.getElementById('location-other');
   other.style.display = val === 'outro' ? 'block' : 'none';
   if (val !== 'outro') other.value = '';
 }
+function handleMLocationSelect(val) {
+  const other = document.getElementById('m-location-other');
+  other.style.display = val === 'outro' ? 'block' : 'none';
+  if (val !== 'outro') other.value = '';
+}
 function getLocation() {
   const sel = document.getElementById('location-select').value;
-  if (sel === 'outro') {
-    const v = document.getElementById('location-other').value.trim();
-    return v || null;
-  }
+  if (sel === 'outro') return document.getElementById('location-other').value.trim() || null;
   return sel;
 }
 function resetLocation() {
@@ -652,26 +903,26 @@ function resetLocation() {
   document.getElementById('location-other').value = '';
 }
 
+// ---- Supabase: permitir UPDATE e DELETE ----
+// Lembra-te de correr no SQL Editor do Supabase:
+// create policy "todos atualizam" on matches for update using (true) with check (true);
+// create policy "todos eliminam" on matches for delete using (true);
+
 // ---- Arranque ----
 function init() {
-  fillPlayerSelects();
-  addSetRow(1);
-  addSetRow(2);
+  fillSelects('p1', 'p2');
+  makeSetRow(1, 'sets', null);
+  makeSetRow(2, 'sets', null);
 
   if (!configured) {
     document.getElementById('config-warn').innerHTML = `
       <div class="config-warn">
-        <strong>Falta configurar.</strong> Abre este ficheiro e cola o teu
-        <code>SUPABASE_URL</code> e a <code>SUPABASE_KEY</code> no topo do
-        &lt;script&gt;. Depois disso a app começa a guardar os jogos.
+        <strong>Falta configurar.</strong> Cola o <code>SUPABASE_URL</code> e a <code>SUPABASE_KEY</code> no topo do script.
       </div>`;
     document.getElementById('duels-container').innerHTML =
       `<div class="empty" style="color:var(--line)">À espera das chaves do Supabase.</div>`;
-    document.getElementById('history-list').innerHTML =
-      `<div class="empty">À espera das chaves do Supabase.</div>`;
     return;
   }
-
   loadMatches();
 }
 

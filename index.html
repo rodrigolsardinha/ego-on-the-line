@@ -264,6 +264,18 @@
     padding: 1px 5px; margin-left: 2px;
   }
 
+  .tb-add-btn {
+    background: none; border: none; color: var(--court);
+    font-family: 'Archivo', sans-serif; font-size: 12px; font-weight: 600;
+    cursor: pointer; padding: 12px 6px 0; flex-shrink: 0; white-space: nowrap;
+  }
+  .tb-add-btn:hover { text-decoration: underline; }
+  .tb-hide-btn {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 15px; line-height: 1; padding: 2px 4px;
+  }
+
+  .btn-set {
     background: none; border: 1.5px dashed var(--court);
     color: var(--court); padding: 9px; width: 100%;
     border-radius: 9px; font-weight: 600; cursor: pointer;
@@ -590,23 +602,15 @@ function fillSelects(p1id, p2id) {
 }
 
 // ---- Set row (reutilizável para form e modal) ----
-function isDiffOne(a, b) {
-  const na = parseInt(a), nb = parseInt(b);
-  return !isNaN(na) && !isNaN(nb) && Math.abs(na - nb) === 1;
+function showTbBlock(row) {
+  row.querySelector('.tb-block').style.display = 'flex';
+  row.querySelector('.tb-add-btn').style.display = 'none';
 }
-
-function updateTbVisibility(row) {
-  const a = row.querySelector('.s-a').value.trim();
-  const b = row.querySelector('.s-b').value.trim();
-  const tbBlock = row.querySelector('.tb-block');
-  const isSuper = row.querySelector('.super-cb').checked;
-  if (!isSuper && isDiffOne(a, b)) {
-    tbBlock.style.display = 'flex';
-  } else {
-    tbBlock.style.display = 'none';
-    row.querySelector('.s-tba').value = '';
-    row.querySelector('.s-tbb').value = '';
-  }
+function hideTbBlock(row) {
+  row.querySelector('.tb-block').style.display = 'none';
+  row.querySelector('.tb-add-btn').style.display = row.querySelector('.super-cb').checked ? 'none' : 'inline';
+  row.querySelector('.s-tba').value = '';
+  row.querySelector('.s-tbb').value = '';
 }
 
 function toggleSuper(row) {
@@ -616,14 +620,16 @@ function toggleSuper(row) {
   const sB = row.querySelector('.s-b');
   if (isSuper) {
     row.classList.add('is-super');
-    label.innerHTML = label.textContent.replace('Set', 'TB');
+    label.textContent = label.textContent.replace('Set', 'TB');
     sA.placeholder = '10'; sB.placeholder = '7';
+    hideTbBlock(row); // super-TB não tem TB interno
+    row.querySelector('.tb-add-btn').style.display = 'none';
   } else {
     row.classList.remove('is-super');
-    label.innerHTML = label.textContent.replace('TB', 'Set');
+    label.textContent = label.textContent.replace('TB', 'Set');
     sA.placeholder = '7'; sB.placeholder = '5';
+    row.querySelector('.tb-add-btn').style.display = 'inline';
   }
-  updateTbVisibility(row);
 }
 
 function makeSetRow(n, container, vals) {
@@ -634,7 +640,7 @@ function makeSetRow(n, container, vals) {
   const tba = vals && vals[2] != null ? vals[2] : '';
   const tbb = vals && vals[3] != null ? vals[3] : '';
   const isSuper = vals && vals[4] === true;
-  const showTb = !isSuper && isDiffOne(sa, sb);
+  const hasTb = !isSuper && (tba !== '' && tba != null || tbb !== '' && tbb != null);
   const labelText = isSuper ? `TB ${n}` : `Set ${n}`;
   if (isSuper) row.classList.add('is-super');
   row.innerHTML = `
@@ -647,20 +653,22 @@ function makeSetRow(n, container, vals) {
       <div class="set-col">
         <input type="text" inputmode="numeric" class="s-b" placeholder="${isSuper ? '7' : '5'}" maxlength="2" value="${sb}">
       </div>
-      <div class="tb-block" style="display:${showTb ? 'flex' : 'none'}; align-items:center; gap:4px; margin-left:6px;">
+      <button type="button" class="tb-add-btn" style="display:${(isSuper || hasTb) ? 'none' : 'inline'}">+ TB</button>
+      <div class="tb-block" style="display:${hasTb ? 'flex' : 'none'}; align-items:center; gap:4px; margin-left:6px;">
         <span style="font-size:11px;color:var(--muted);white-space:nowrap;">TB</span>
         <input type="text" inputmode="numeric" class="s-tba tb-mini" placeholder="–" maxlength="2" value="${tba}">
         <span style="color:var(--muted);font-size:12px;">-</span>
         <input type="text" inputmode="numeric" class="s-tbb tb-mini" placeholder="–" maxlength="2" value="${tbb}">
+        <button type="button" class="tb-hide-btn" title="remover tiebreak">×</button>
       </div>
     </div>
     <label class="super-toggle" title="Super-tiebreak (conta pontos, não games)">
       <input type="checkbox" class="super-cb" ${isSuper ? 'checked' : ''}> Super-TB
     </label>
-    <button class="btn-remove-set" title="remover" onclick="this.parentElement.remove(); renumberSets('${container}');">×</button>
+    <button class="btn-remove-set" title="remover set" onclick="this.parentElement.remove(); renumberSets('${container}');">×</button>
   `;
-  row.querySelector('.s-a').addEventListener('input', () => updateTbVisibility(row));
-  row.querySelector('.s-b').addEventListener('input', () => updateTbVisibility(row));
+  row.querySelector('.tb-add-btn').addEventListener('click', () => showTbBlock(row));
+  row.querySelector('.tb-hide-btn').addEventListener('click', () => hideTbBlock(row));
   row.querySelector('.super-cb').addEventListener('change', () => toggleSuper(row));
   document.getElementById(container).appendChild(row);
 }
